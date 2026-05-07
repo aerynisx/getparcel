@@ -53,6 +53,13 @@ class ParcelController extends Controller
 
         return response()->json($parcel);
     }  
+
+    public function index()
+    {
+    return response()->json(
+        \App\Models\Parcel::orderBy('created_at', 'desc')->get()
+    );
+    }
 }
 
 ?>
