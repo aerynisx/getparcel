@@ -8,6 +8,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [lastAction, setLastAction] = useState(null);
 
   const logout = () => {
     // If later you use auth token, clear it here
@@ -27,12 +28,22 @@ export default function Dashboard() {
   }, []);
 
   const markCollected = async (id) => {
+    console.log("MARK COLLECTED", id);
     await fetch(`http://127.0.0.1:8000/api/parcel/${id}/collect`, {
       method: "PATCH",
     });
 
     fetchParcels();
   };
+
+  const markStored = async (id) => {
+    console.log("MARK STORED", id);
+    await fetch(`http://127.0.0.1:8000/api/parcel/${id}/restore`, {
+        method: "PATCH",
+    });
+
+    fetchParcels();
+ };
 
     useEffect(() => {
     setCurrentPage(1);
@@ -155,13 +166,20 @@ const totalPages = Math.ceil(filteredParcels.length / itemsPerPage);
 
             {/* 8. Action */}
             <td>
-                {p.status === "stored" && (
-                <button
-                    onClick={() => markCollected(p.id)}
-                    className="bg-[#FF6B8E] text-white px-3 py-1 rounded hover:opacity-80 shadow-lg"
-                >
+                {p.status === "stored" ? (
+                    <button
+                        onClick={() => markCollected(p.id)}
+                        className="bg-[#FF6B8E] hover:opacity-80 shadow-lg text-white px-3 py-1 rounded"
+                    >
                     Mark Collected
-                </button>
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => markStored(p.id)}
+                        className="bg-gray-500 hover:opacity-80 shadow-lg text-white px-3 py-1 rounded"
+                    >
+                    Mark Stored
+                    </button>
                 )}
             </td>
 

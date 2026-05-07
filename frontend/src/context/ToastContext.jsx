@@ -3,6 +3,10 @@ import Toast from "../components/Toast";
 
 const ToastContext = createContext();
 
+const showToast = (type, message, action = null) => {
+  setToast({ type, message, action });
+};
+
 export function ToastProvider({ children }) {
   const [toast, setToast] = useState(null);
 

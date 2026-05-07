@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Parcel;
 
 class ParcelController extends Controller
 {
@@ -60,6 +61,15 @@ class ParcelController extends Controller
         \App\Models\Parcel::orderBy('created_at', 'desc')->get()
     );
     }
-}
 
-?>
+        public function markStored($id)
+    {
+        $parcel = \App\Models\Parcel::findOrFail($id);
+
+        $parcel->status = 'stored';
+        $parcel->save();
+
+        return response()->json($parcel);
+    }  
+
+}

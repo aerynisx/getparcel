@@ -43,4 +43,16 @@ export default function Toast({ type, message, onClose }) {
       </button>
     </div>
   );
+
+  {toast.action && (
+  <button
+    onClick={() => {
+      toast.action();
+      onClose();
+    }}
+    className="ml-3 underline text-white font-semibold"
+  >
+    Undo
+  </button>
+)}
 }
