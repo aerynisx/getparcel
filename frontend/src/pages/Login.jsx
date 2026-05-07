@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -42,7 +43,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFDEE6]">
+    <div className="min-h-screen bg-[#FFDEE6] flex flex-col items-center justify-center">
 
       <div className="bg-white p-8 rounded-2xl shadow-lg w-96 text-center">
 
@@ -72,6 +73,13 @@ export default function Login() {
         </button>
 
       </div>
+
+      <Link
+          to="/"
+          className="mt-6 text-[#FF6B8E] hover:underline font-medium"
+        >
+            Back
+        </Link>
 
     </div>
   );
