@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const [parcels, setParcels] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const logout = () => {
+    // If later you use auth token, clear it here
+    localStorage.removeItem("token");
+
+    navigate("/login");
+  };
 
   const fetchParcels = async () => {
     const res = await fetch("http://127.0.0.1:8000/api/parcels");
@@ -23,6 +34,10 @@ export default function Dashboard() {
     fetchParcels();
   };
 
+    useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filter]);
+
   const filteredParcels = parcels.filter((p) => {
   const matchSearch =
     p.parcel_id.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,12 +49,33 @@ export default function Dashboard() {
   return matchSearch && matchStatus;
 });
 
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+const currentParcels = filteredParcels.slice(
+  indexOfFirstItem,
+  indexOfLastItem
+);
+
+const totalPages = Math.ceil(filteredParcels.length / itemsPerPage);
+
   return (
     <div className="min-h-screen bg-[#FFDEE6] p-8">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Admin Dashboard
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+  
+  <h1 className="text-3xl font-bold">
+    Admin Dashboard
+  </h1>
+
+  <button
+    onClick={logout}
+    className="bg-[#FB003D] text-white px-4 py-2 rounded hover:opacity-80 shadow-lg"
+  >
+    Log Out
+  </button>
+
+</div>
 
     {/* SEARCH */}
       <div className="flex flex-col md:flex-row gap-3 mb-4">
@@ -83,7 +119,7 @@ export default function Dashboard() {
           </thead>
 
           <tbody>
-            {filteredParcels.map((p) => (
+            {currentParcels.map((p) => (
             <tr key={p.id} className="border-b">
 
             {/* 1. Parcel ID */}
@@ -122,7 +158,7 @@ export default function Dashboard() {
                 {p.status === "stored" && (
                 <button
                     onClick={() => markCollected(p.id)}
-                    className="bg-[#FF6B8E] text-white px-3 py-1 rounded"
+                    className="bg-[#FF6B8E] text-white px-3 py-1 rounded hover:opacity-80 shadow-lg"
                 >
                     Mark Collected
                 </button>
@@ -134,6 +170,30 @@ export default function Dashboard() {
         </tbody>
 
         </table>
+        {/* PAGINATION */}
+        <div className="flex justify-center mt-6 gap-2">
+
+  <button
+    disabled={currentPage === 1}
+    onClick={() => setCurrentPage((p) => p - 1)}
+    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+  >
+    Prev
+  </button>
+
+  <span className="px-3 py-1">
+    Page {currentPage} / {totalPages}
+  </span>
+
+  <button
+    disabled={currentPage === totalPages}
+    onClick={() => setCurrentPage((p) => p + 1)}
+    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+  >
+    Next
+  </button>
+
+</div>
 
       </div>
     </div>
