@@ -9,6 +9,12 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [lastAction, setLastAction] = useState(null);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [receiverName, setReceiverName] = useState("");
+  const [receivedDate, setReceivedDate] = useState("");
+  const [courier, setCourier] = useState("");
+  const [description, setDescription] = useState("");
+  const [storageLocation, setStorageLocation] = useState("");
 
   const logout = () => {
     // If later you use auth token, clear it here
@@ -43,32 +49,62 @@ export default function Dashboard() {
     });
 
     fetchParcels();
- };
+  };
 
     useEffect(() => {
     setCurrentPage(1);
   }, [search, filter]);
 
   const filteredParcels = parcels.filter((p) => {
-  const matchSearch =
-    p.parcel_id.toLowerCase().includes(search.toLowerCase()) ||
-    p.receiver_name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+        p.parcel_id.toLowerCase().includes(search.toLowerCase()) ||
+        p.receiver_name.toLowerCase().includes(search.toLowerCase());
 
-  const matchStatus =
-    filter === "all" ? true : p.status === filter;
+    const matchStatus =
+        filter === "all" ? true : p.status === filter;
 
-  return matchSearch && matchStatus;
-});
+    return matchSearch && matchStatus;
+  });
 
-const indexOfLastItem = currentPage * itemsPerPage;
-const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
-const currentParcels = filteredParcels.slice(
-  indexOfFirstItem,
-  indexOfLastItem
-);
+  const currentParcels = filteredParcels.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
-const totalPages = Math.ceil(filteredParcels.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredParcels.length / itemsPerPage);
+
+  const createParcel = async () => {
+  await fetch("http://127.0.0.1:8000/api/parcel", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+
+    body: JSON.stringify({
+      tracking_number: trackingNumber,
+      receiver_name: receiverName,
+      received_date: receivedDate,
+      courier: courier,
+      description: description,
+      storage_location: storageLocation,
+      status: "stored",
+    }),
+  });
+
+  // refresh table
+  fetchParcels();
+
+  // clear form
+  setTrackingNumber("");
+  setReceiverName("");
+  setReceivedDate("");
+  setCourier("");
+  setDescription("");
+  setStorageLocation("");
+  };
 
   return (
     <div className="min-h-screen bg-[#FFDEE6] p-8">
@@ -112,6 +148,75 @@ const totalPages = Math.ceil(filteredParcels.length / itemsPerPage);
 
         </div>
 
+
+<div className="bg-white p-6 rounded-2xl shadow mb-6">
+
+  <h2 className="text-xl font-bold mb-4">
+    Add Parcel
+  </h2>
+
+  <div className="grid grid-cols-2 gap-4">
+
+    <input
+      type="text"
+      placeholder="Tracking Number"
+      value={trackingNumber}
+      onChange={(e) => setTrackingNumber(e.target.value)}
+      className="border p-2 rounded"
+    />
+
+    <input
+      type="text"
+      placeholder="Receiver Name"
+      value={receiverName}
+      onChange={(e) => setReceiverName(e.target.value)}
+      className="border p-2 rounded"
+    />
+
+    <input
+      type="date"
+      value={receivedDate}
+      onChange={(e) => setReceivedDate(e.target.value)}
+      className="border p-2 rounded"
+    />
+
+    <input
+      type="text"
+      placeholder="Courier"
+      value={courier}
+      onChange={(e) => setCourier(e.target.value)}
+      className="border p-2 rounded"
+    />
+
+    <input
+      type="text"
+      placeholder="Description"
+      value={description}
+      onChange={(e) => setDescription(e.target.value)}
+      className="border p-2 rounded"
+    />
+
+    <input
+      type="text"
+      placeholder="Storage Location"
+      value={storageLocation}
+      onChange={(e) => setStorageLocation(e.target.value)}
+      className="border p-2 rounded"
+    />
+
+  </div>
+
+  <button
+    onClick={createParcel}
+    className="mt-4 bg-[#FF6B8E] text-white px-4 py-2 rounded hover:opacity-80"
+  >
+    Add Parcel
+  </button>
+
+</div>
+
+
+
     {/* TABLE */}
       <div className="bg-white rounded-2xl shadow p-6">
 
@@ -120,7 +225,7 @@ const totalPages = Math.ceil(filteredParcels.length / itemsPerPage);
             <tr className="border-b">
               <th>Parcel ID</th>
               <th>Tracking</th>
-              <th>Status</th>
+              <th>Receiver Name</th>
               <th>Received Date</th>
               <th>Storage Location</th>
               <th>Description</th>
