@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const [parcels, setParcels] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
   const fetchParcels = async () => {
     const res = await fetch("http://127.0.0.1:8000/api/parcels");
@@ -21,6 +23,17 @@ export default function Dashboard() {
     fetchParcels();
   };
 
+  const filteredParcels = parcels.filter((p) => {
+  const matchSearch =
+    p.parcel_id.toLowerCase().includes(search.toLowerCase()) ||
+    p.receiver_name.toLowerCase().includes(search.toLowerCase());
+
+  const matchStatus =
+    filter === "all" ? true : p.status === filter;
+
+  return matchSearch && matchStatus;
+});
+
   return (
     <div className="min-h-screen bg-[#FFDEE6] p-8">
 
@@ -28,6 +41,31 @@ export default function Dashboard() {
         Admin Dashboard
       </h1>
 
+    {/* SEARCH */}
+      <div className="flex flex-col md:flex-row gap-3 mb-4">
+
+        <input
+            type="text"
+            placeholder="Search"
+            className="border px-3 py-2 rounded-lg w-full"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+        />
+
+    {/* FILTER */}
+        <select
+            className="border px-3 py-2 rounded-lg"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+        >
+            <option value="all">All</option>
+            <option value="stored">Stored</option>
+            <option value="collected">Collected</option>
+        </select>
+
+        </div>
+
+    {/* TABLE */}
       <div className="bg-white rounded-2xl shadow p-6">
 
         <table className="w-full text-left">
@@ -45,7 +83,7 @@ export default function Dashboard() {
           </thead>
 
           <tbody>
-            {parcels.map((p) => (
+            {filteredParcels.map((p) => (
             <tr key={p.id} className="border-b">
 
             {/* 1. Parcel ID */}
@@ -79,7 +117,7 @@ export default function Dashboard() {
                 </span>
             </td>
 
-            {/* Action */}
+            {/* 8. Action */}
             <td>
                 {p.status === "stored" && (
                 <button
@@ -100,4 +138,5 @@ export default function Dashboard() {
       </div>
     </div>
   );
+
 }
