@@ -10,3 +10,4 @@ Route::patch('/parcel/{id}/collect', [ParcelController::class, 'markCollected'])
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/parcels', [ParcelController::class, 'index']);
 Route::patch('/parcel/{id}/restore', [ParcelController::class, 'markStored']);
+Route::put('/parcel/{id}', [ParcelController::class, 'update']);

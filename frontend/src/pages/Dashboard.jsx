@@ -11,10 +11,17 @@ export default function Dashboard() {
   const [lastAction, setLastAction] = useState(null);
   const [trackingNumber, setTrackingNumber] = useState("");
   const [receiverName, setReceiverName] = useState("");
-  const [receivedDate, setReceivedDate] = useState("");
   const [courier, setCourier] = useState("");
   const [description, setDescription] = useState("");
   const [storageLocation, setStorageLocation] = useState("");
+  const [receivedDate, setReceivedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [editingParcel, setEditingParcel] = useState(null);
+  const [editTracking, setEditTracking] = useState("");
+  const [editReceiver, setEditReceiver] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editCourier, setEditCourier] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editLocation, setEditLocation] = useState("");
 
   const logout = () => {
     // If later you use auth token, clear it here
@@ -23,16 +30,19 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  // fetch parcels from backend and store in state
   const fetchParcels = async () => {
     const res = await fetch("http://127.0.0.1:8000/api/parcels");
     const data = await res.json();
     setParcels(data);
   };
 
+  // on component mount, fetch parcels
   useEffect(() => {
     fetchParcels();
   }, []);
 
+  // mark collected = change status to "collected"
   const markCollected = async (id) => {
     console.log("MARK COLLECTED", id);
     await fetch(`http://127.0.0.1:8000/api/parcel/${id}/collect`, {
@@ -42,6 +52,7 @@ export default function Dashboard() {
     fetchParcels();
   };
 
+  // mark stored = change status back to "stored"
   const markStored = async (id) => {
     console.log("MARK STORED", id);
     await fetch(`http://127.0.0.1:8000/api/parcel/${id}/restore`, {
@@ -51,15 +62,18 @@ export default function Dashboard() {
     fetchParcels();
   };
 
+  // whenever search or filter changes, reset to page 1
     useEffect(() => {
     setCurrentPage(1);
   }, [search, filter]);
 
+  // apply search and filter to parcels
   const filteredParcels = parcels.filter((p) => {
     const matchSearch =
         p.parcel_id.toLowerCase().includes(search.toLowerCase()) ||
         p.receiver_name.toLowerCase().includes(search.toLowerCase());
 
+        // if filter is "all", match all. otherwise only match if status equals filter
     const matchStatus =
         filter === "all" ? true : p.status === filter;
 
@@ -69,6 +83,7 @@ export default function Dashboard() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
+  // get only the parcels for the current page
   const currentParcels = filteredParcels.slice(
     indexOfFirstItem,
     indexOfLastItem
@@ -76,6 +91,7 @@ export default function Dashboard() {
 
   const totalPages = Math.ceil(filteredParcels.length / itemsPerPage);
 
+  // create new parcel
   const createParcel = async () => {
   await fetch("http://127.0.0.1:8000/api/parcel", {
     method: "POST",
@@ -100,11 +116,57 @@ export default function Dashboard() {
   // clear form
   setTrackingNumber("");
   setReceiverName("");
-  setReceivedDate("");
+  setReceivedDate(new Date().toISOString().split("T")[0]);
   setCourier("");
   setDescription("");
   setStorageLocation("");
   };
+
+  // open edit form and populate with parcel data
+  const openEdit = (parcel) => {
+  setEditingParcel(parcel);
+  setEditTracking(parcel.tracking_number);
+  setEditReceiver(parcel.receiver_name);
+  setEditDate(parcel.received_date);
+  setEditCourier(parcel.courier);
+  setEditDescription(parcel.description);
+  setEditLocation(parcel.storage_location);
+  };
+
+  // send updated parcel data to backend
+  const updateParcel = async () => {
+  await fetch(
+    `http://127.0.0.1:8000/api/parcel/${editingParcel.id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        tracking_number: editTracking,
+        receiver_name: editReceiver,
+        received_date: editDate,
+        courier: editCourier,
+        description: editDescription,
+        storage_location: editLocation,
+      }),
+    }
+  );
+
+  setEditingParcel(null);
+
+  fetchParcels();
+  };
+
+  // prevent background scroll when editing
+  useEffect(() => {
+  if (editingParcel) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "auto";
+  }
+}, [editingParcel]);
 
   return (
     <div className="min-h-screen bg-[#FFDEE6] p-8">
@@ -206,31 +268,31 @@ export default function Dashboard() {
 
   </div>
 
+<div className="flex justify-end">
   <button
     onClick={createParcel}
     className="mt-4 bg-[#FF6B8E] text-white px-4 py-2 rounded hover:opacity-80"
   >
     Add Parcel
   </button>
+</div>
 
 </div>
 
-
-
     {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow p-6">
+      <div className="bg-white rounded-2xl shadow p-6 overflow-x-auto">
 
-        <table className="w-full text-left">
+        <table className="w-full text-left table-fixed">
           <thead>
-            <tr className="border-b">
-              <th>Parcel ID</th>
-              <th>Tracking</th>
-              <th>Receiver Name</th>
-              <th>Received Date</th>
-              <th>Storage Location</th>
+            <tr className="border-b text-left">
+              <th className="w-24 py-3 ">Parcel ID</th>
+              <th className="w-60 text-center">Tracking</th>
+              <th className="w-65 text-center">Receiver Name</th>
+              <th className="w-32">Received Date</th>
+              <th className="w-40">Storage Location</th>
               <th>Description</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th className="w-28 text-center">Status</th>
+              <th className="w-60 text-center">Action</th>
             </tr>
           </thead>
 
@@ -257,36 +319,47 @@ export default function Dashboard() {
             <td>{p.description}</td>
 
             {/* 7. Status */}
-            <td>
-                <span
-                className={`px-2 py-1 rounded text-sm ${
+            <td className="py-3">
+                <div
+                className={`mx-auto w-20 py-1 rounded text-sm text-center ${
                     p.status === "collected"
                     ? "bg-green-100"
                     : "bg-gray-100"
                 }`}
                 >
                 {p.status}
-                </span>
+                </div>
             </td>
 
             {/* 8. Action */}
-            <td>
-                {p.status === "stored" ? (
-                    <button
-                        onClick={() => markCollected(p.id)}
-                        className="bg-[#FF6B8E] hover:opacity-80 shadow-lg text-white px-3 py-1 rounded"
-                    >
-                    Mark Collected
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => markStored(p.id)}
-                        className="bg-gray-500 hover:opacity-80 shadow-lg text-white px-3 py-1 rounded"
-                    >
-                    Mark Stored
-                    </button>
-                )}
-            </td>
+            <td className="py-3">
+  <div className="flex justify-center gap-2">
+
+    {p.status === "stored" ? (
+      <button
+        onClick={() => markCollected(p.id)}
+        className="w-36 bg-[#FF6B8E] text-white py-2 rounded hover:opacity-80"
+      >
+        Mark Collected
+      </button>
+    ) : (
+      <button
+        onClick={() => markStored(p.id)}
+        className="w-36 bg-gray-500 text-white py-2 rounded hover:opacity-80"
+      >
+        Mark Stored
+      </button>
+    )}
+
+    <button
+      onClick={() => openEdit(p)}
+      className="bg-[#FFDEE6] text-[#640018] px-4 py-2 rounded hover:opacity-60"
+    >
+      Edit
+    </button>
+
+  </div>
+</td>
 
             </tr>
         ))}
@@ -319,6 +392,86 @@ export default function Dashboard() {
 </div>
 
       </div>
+
+      {/* EDIT PARCEL MODAL */}
+      {editingParcel && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
+
+    <div className="bg-white p-6 rounded-2xl shadow w-[500px]">
+
+      <h2 className="text-2xl font-bold mb-4">
+        Edit Parcel
+      </h2>
+
+      <div className="grid grid-cols-2 gap-4">
+
+        <input
+          value={editTracking}
+          onChange={(e) => setEditTracking(e.target.value)}
+          className="border p-2 rounded"
+          placeholder="Tracking Number"
+        />
+
+        <input
+          value={editReceiver}
+          onChange={(e) => setEditReceiver(e.target.value)}
+          className="border p-2 rounded"
+          placeholder="Receiver Name"
+        />
+
+        <input
+          type="date"
+          value={editDate}
+          onChange={(e) => setEditDate(e.target.value)}
+          className="border p-2 rounded"
+        />
+
+        <input
+          value={editCourier}
+          onChange={(e) => setEditCourier(e.target.value)}
+          className="border p-2 rounded"
+          placeholder="Courier"
+        />
+
+        <input
+          value={editDescription}
+          onChange={(e) => setEditDescription(e.target.value)}
+          className="border p-2 rounded"
+          placeholder="Description"
+        />
+
+        <input
+          value={editLocation}
+          onChange={(e) => setEditLocation(e.target.value)}
+          className="border p-2 rounded"
+          placeholder="Storage Location"
+        />
+
+      </div>
+
+      <div className="flex justify-end gap-2 mt-6">
+
+        <button
+          onClick={() => setEditingParcel(null)}
+          className="px-4 py-2 rounded bg-gray-300 hover:opacity-80"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={updateParcel}
+          className="px-4 py-2 rounded bg-[#FF6B8E] text-white hover:opacity-80"
+        >
+          Save
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
+
     </div>
   );
 

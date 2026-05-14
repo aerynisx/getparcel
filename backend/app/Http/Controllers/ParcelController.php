@@ -72,4 +72,22 @@ class ParcelController extends Controller
         return response()->json($parcel);
     }  
 
+    public function update(Request $request, $id)
+    {
+        $parcel = Parcel::findOrFail($id);
+
+        $parcel->tracking_number = $request->tracking_number;
+        $parcel->receiver_name = $request->receiver_name;
+        $parcel->received_date = $request->received_date;
+        $parcel->courier = $request->courier;
+        $parcel->description = $request->description;
+        $parcel->storage_location = $request->storage_location;
+
+        $parcel->save();
+
+        return response()->json([
+            "message" => "Parcel updated"
+        ]);
+    }
+
 }
