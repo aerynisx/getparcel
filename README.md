@@ -98,27 +98,6 @@ GetParcel simplifies the process by:
 
 ---
 
-# Screenshots
-
-## Home Page
-
-* Parcel tracking search bar
-* Minimal and user-friendly UI
-
-## Admin Dashboard
-
-* Parcel table
-* Search and filtering
-* Pagination
-* CRUD functionality
-
-## Edit Parcel Modal
-
-* Update parcel details
-* Delete functionality with confirmation modal
-
----
-
 # Installation Guide
 
 ## Clone Repository
